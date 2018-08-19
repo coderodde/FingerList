@@ -213,7 +213,7 @@ public final class FingerList<T> {
                 node = node.previousNode;
             }
         } else {
-            bestFingerDistance += bestFingerDistance;
+            bestFinger.index += bestFingerDistance;
             
             while (bestFingerDistance > 0) {
                 node = node.nextNode;
@@ -227,7 +227,7 @@ public final class FingerList<T> {
             bestFinger.index--;
         } else if (node.nextNode != null) {
             bestFinger.node = node.nextNode;
-            bestFinger.index++;
+//            bestFinger.index++;
         }
         
         if (node == headNode) {
@@ -259,6 +259,10 @@ public final class FingerList<T> {
         }
         
         size--;
+    }
+    
+    public int size() {
+        return size;
     }
     
     private void checkAccessIndex(int index) {
