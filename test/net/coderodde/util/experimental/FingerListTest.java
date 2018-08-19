@@ -54,8 +54,39 @@ public class FingerListTest {
     }
     
     @Test
+    public void testSkewedAddition() {
+        list.add(0, 0);
+        list.add(1, 1);
+        list.add(0, -1);
+        list.add(1, 10);
+        list.add(4, 100);
+        
+        // -1, 10, 0, 1, 100
+        assertEquals(-1, (int) list.get(0));
+        assertEquals(10, (int) list.get(1));
+        assertEquals(0,  (int) list.get(2));
+        assertEquals(1,  (int) list.get(3));
+        assertEquals(100, (int) list.get(4));
+        
+        list.remove(2);
+        
+        assertEquals(-1,  (int) list.get(0));
+        assertEquals(10,  (int) list.get(1));
+        assertEquals(1,   (int) list.get(2));
+        assertEquals(100, (int) list.get(3));
+        
+        list.add(0, 5);
+        
+        assertEquals(5, (int) list.get(0));
+        
+        list.add(5, 55);
+        
+        assertEquals(55, (int) list.get(5));
+    }
+    
+    @Test
     public void bruteForceTest() {
-        long seed = System.currentTimeMillis();
+        long seed = 1534668619918L; System.currentTimeMillis();
         Random random = new Random(seed);
         
         System.out.println("Seed = " + seed);
@@ -72,9 +103,16 @@ public class FingerListTest {
                 // Remove:
                 case 0:
                     if (javaList.size() > 0) {
-                        int index = random.nextInt(javaList.size() + 1);
+                        int index = random.nextInt(javaList.size());
                         javaList.remove(index);
-                        fingerList.remove(index);
+                        
+                        try {
+                            fingerList.remove(index);
+                        } catch (Exception ex) {
+                            System.out.println(
+                                    ex.getMessage() + " on " + 
+                                    operationNumber + " in remove()");
+                        }
                         
                         if (!equals(javaList, fingerList)) {
                             fail("Failed while removing at index " + index);
@@ -85,14 +123,25 @@ public class FingerListTest {
                     
                 // Add:
                 case 1:
-                    Integer integer = random.nextInt(1000);
-                    int index = random.nextInt(javaList.size() + 1);
-                    javaList.add(index, integer);
-                    fingerList.add(index, integer);
                     
-                    if (!equals(javaList, fingerList)) {
-                        fail("Failed while adding at index " + index + 
-                             " value " + integer);
+                    if (javaList.size() < 10) {
+                        // Do not create large lists, max. 10 elements.
+                        Integer integer = random.nextInt(1000);
+                        int index = random.nextInt(javaList.size() + 1);
+                        javaList.add(index, integer);
+                        
+                        try {
+                            fingerList.add(index, integer);
+                        } catch (Exception ex) {
+                            System.out.println(
+                                    ex.getMessage() + " on " + 
+                                    operationNumber + " in add()");
+                        }
+
+                        if (!equals(javaList, fingerList)) {
+                            fail("Failed while adding at index " + index + 
+                                 " value " + integer);
+                        }
                     }
                     
                     break;
@@ -100,7 +149,7 @@ public class FingerListTest {
                 // Get:
                 case 2:
                     if (javaList.size() > 0) {
-                        index = random.nextInt(javaList.size());
+                        int index = random.nextInt(javaList.size());
                         int javaListInt = javaList.get(index);
                         int fingerListInt = fingerList.get(index);
 
@@ -122,13 +171,15 @@ public class FingerListTest {
         }
         
         Iterator<Integer> javaListIterator = javaList.iterator();
-        int index = 0;
+        int fingerListIndex = 0;
         
         while (javaListIterator.hasNext()) {
-            if (Objects.equals(javaListIterator.next(), 
-                               fingerList.get(index))) {
+            if (!Objects.equals(javaListIterator.next(), 
+                                fingerList.get(fingerListIndex))) {
                 return false;
             }
+            
+            fingerListIndex++;
         }
         
         return true;

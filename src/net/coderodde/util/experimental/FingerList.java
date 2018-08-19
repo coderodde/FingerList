@@ -96,7 +96,7 @@ public final class FingerList<T> {
                 }
             }
             
-            if (index < bestFinger.index) {
+            if (index <= bestFinger.index) {
                 // March to the left:
                 while (distance-- > 0) {
                     bestFinger.node = bestFinger.node.previousNode;
@@ -107,17 +107,21 @@ public final class FingerList<T> {
                     newNode.nextNode = headNode;
                     headNode.previousNode = newNode;
                     headNode = newNode;
+                    bestFinger.node = newNode;
+                    bestFinger.index = 0;
                 } else {
                     // Insert before node:
                     newNode.nextNode = bestFinger.node;
                     newNode.previousNode = bestFinger.node.previousNode;
-                    bestFinger.node.previousNode.nextNode = newNode;
-                    bestFinger.node.nextNode.previousNode = newNode;
+                    newNode.nextNode.previousNode = newNode;
+                    newNode.previousNode.nextNode = newNode;
+                    bestFinger.node = newNode;
+                    bestFinger.index = index;
                 }
                 
                 // Update the finger index:
                 for (Finger<T> finger : fingers) {
-                    if (finger.index > index) {
+                    if (finger.index >= index && finger != bestFinger) {
                         finger.index++;
                     }
                 }
@@ -140,7 +144,7 @@ public final class FingerList<T> {
                 newNode.nextNode = bestFinger.node;
                 
                 for (Finger<T> finger : fingers) {
-                    if (finger.index > index) {
+                    if (finger.index >= index) {
                         finger.index++;
                     }
                 }
@@ -210,12 +214,14 @@ public final class FingerList<T> {
             bestFinger.index -= bestFingerDistance;
             
             while (bestFingerDistance > 0) {
+                bestFingerDistance--;
                 node = node.previousNode;
             }
         } else {
             bestFinger.index += bestFingerDistance;
             
             while (bestFingerDistance > 0) {
+                bestFingerDistance--;
                 node = node.nextNode;
             }
         }
