@@ -75,13 +75,23 @@ public class FingerListTest {
         assertEquals(1,   (int) list.get(2));
         assertEquals(100, (int) list.get(3));
         
+        //5, -1, 10, 1, 100
         list.add(0, 5);
         
         assertEquals(5, (int) list.get(0));
         
+        //5, -1, 10, 1, 100, 55
         list.add(5, 55);
-        
+       
         assertEquals(55, (int) list.get(5));
+        
+        list.remove(4);
+        
+        assertEquals(5,    (int) list.get(0));
+        assertEquals(-1,   (int) list.get(1));
+        assertEquals(10,   (int) list.get(2));
+        assertEquals(1,    (int) list.get(3));
+        assertEquals(55,   (int) list.get(4));
     }
     
     @Test
@@ -98,11 +108,12 @@ public class FingerListTest {
                  operationNumber < 10_000; 
                  operationNumber++) {
             int operationCode = random.nextInt(3);
-            
+            System.out.print(operationNumber + " ");
             switch (operationCode) {
                 // Remove:
                 case 0:
                     if (javaList.size() > 0) {
+                        System.out.println("remove");
                         int index = random.nextInt(javaList.size());
                         javaList.remove(index);
                         
@@ -125,6 +136,7 @@ public class FingerListTest {
                 case 1:
                     
                     if (javaList.size() < 10) {
+                        System.out.println("add");
                         // Do not create large lists, max. 10 elements.
                         Integer integer = random.nextInt(1000);
                         int index = random.nextInt(javaList.size() + 1);
@@ -148,6 +160,8 @@ public class FingerListTest {
                     
                 // Get:
                 case 2:
+                    System.out.println("get");    
+                    
                     if (javaList.size() > 0) {
                         int index = random.nextInt(javaList.size());
                         int javaListInt = javaList.get(index);
@@ -174,8 +188,10 @@ public class FingerListTest {
         int fingerListIndex = 0;
         
         while (javaListIterator.hasNext()) {
-            if (!Objects.equals(javaListIterator.next(), 
-                                fingerList.get(fingerListIndex))) {
+            Integer javaListInteger = javaListIterator.next();
+            Integer fingerListInteger = fingerList.get(fingerListIndex);
+            
+            if (!Objects.equals(javaListInteger, fingerListInteger)) {
                 return false;
             }
             

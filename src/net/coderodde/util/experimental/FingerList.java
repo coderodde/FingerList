@@ -75,83 +75,85 @@ public final class FingerList<T> {
         if (size == 0) {
             headNode = new FingerListNode(element);
             tailNode = headNode;
+            size = 1;
             
             for (Finger<T> finger : fingers) {
                 finger.index = 0;
                 finger.node = headNode;
             }
-        } else {
-            FingerListNode<T> newNode = new FingerListNode<>(element);
-            int bestFingerDistance = Integer.MAX_VALUE;
-            Finger<T> bestFinger = null;
-            int distance = 0;
+        } else if (size == index) {
+            FingerListNode<T> nodeToAdd = new FingerListNode<>(element);
+            tailNode.nextNode = nodeToAdd;
+            nodeToAdd.previousNode = tailNode;
+            tailNode = nodeToAdd;
             
-            // Find the finger closest to the insertion index:
+            int shortestFingerDistance = Integer.MAX_VALUE;
+            Finger<T> closestFinger = null;
+            
             for (Finger<T> finger : fingers) {
-                distance = Math.abs(index - finger.index);
+                int fingerDistance = Math.abs(index - finger.index);
                 
-                if (bestFingerDistance > distance) {
-                    bestFingerDistance = distance;
-                    bestFinger = finger;
+                if (shortestFingerDistance > fingerDistance) {
+                    shortestFingerDistance = fingerDistance;
+                    closestFinger = finger;
                 }
             }
             
-            if (index <= bestFinger.index) {
-                // March to the left:
-                while (distance-- > 0) {
-                    bestFinger.node = bestFinger.node.previousNode;
-                }
+            closestFinger.index = size;
+            closestFinger.node = tailNode;
+            size++;
+        } else {
+            FingerListNode<T> nodeToAdd = new FingerListNode<>(element);
+            int shortestFingerDistance = Integer.MAX_VALUE;
+            Finger<T> closestFinger = null;
+            
+            for (Finger<T> finger : fingers) {
+                int fingerDistance = Math.abs(index - finger.index);
                 
-                if (index == 0) {
-                    // Insert before headNode:
-                    newNode.nextNode = headNode;
-                    headNode.previousNode = newNode;
-                    headNode = newNode;
-                    bestFinger.node = newNode;
-                    bestFinger.index = 0;
-                } else {
-                    // Insert before node:
-                    newNode.nextNode = bestFinger.node;
-                    newNode.previousNode = bestFinger.node.previousNode;
-                    newNode.nextNode.previousNode = newNode;
-                    newNode.previousNode.nextNode = newNode;
-                    bestFinger.node = newNode;
-                    bestFinger.index = index;
-                }
-                
-                // Update the finger index:
-                for (Finger<T> finger : fingers) {
-                    if (finger.index >= index && finger != bestFinger) {
-                        finger.index++;
-                    }
-                }
-            } else if (index == size) {
-                // Append to the end of list:
-                tailNode.nextNode = newNode;
-                newNode.previousNode = tailNode;
-                tailNode = newNode;
-                bestFinger.index = size;
-                bestFinger.node = newNode;
-            } else {
-                // March to the right:
-                while (distance-- > 0) {
-                    bestFinger.node = bestFinger.node.nextNode;
-                }
-                
-                bestFinger.node.previousNode.nextNode = newNode;
-                bestFinger.node.nextNode.previousNode = newNode;
-                newNode.previousNode = bestFinger.node.previousNode;
-                newNode.nextNode = bestFinger.node;
-                
-                for (Finger<T> finger : fingers) {
-                    if (finger.index >= index) {
-                        finger.index++;
-                    }
+                if (shortestFingerDistance > fingerDistance) {
+                    shortestFingerDistance = fingerDistance;
+                    closestFinger = finger;
                 }
             }
+            
+            // Closest finger found:
+            if (index <= closestFinger.index) {
+                closestFinger.index -= shortestFingerDistance;
+                
+                while (shortestFingerDistance > 0) {
+                    shortestFingerDistance--;
+                    closestFinger.node = closestFinger.node.previousNode;
+                }
+            } else {
+                closestFinger.index += shortestFingerDistance;
+                
+                while (shortestFingerDistance >  0) {
+                    shortestFingerDistance--;
+                    closestFinger.node = closestFinger.node.nextNode;
+                }
+            }
+            
+            // Insert a new node before closestFinger.node:
+            if (closestFinger.index == 0) {
+                nodeToAdd.nextNode = closestFinger.node;
+                closestFinger.node.previousNode = nodeToAdd;
+                headNode = nodeToAdd;
+            } else {
+                nodeToAdd.nextNode = closestFinger.node;
+                nodeToAdd.previousNode = closestFinger.node.previousNode;
+                closestFinger.node.previousNode.nextNode = nodeToAdd;
+                closestFinger.node.previousNode = nodeToAdd;
+                closestFinger.index = index;
+            }
+            
+            for (Finger<T> finger : fingers) {
+                if (finger.index >= index) {
+                    finger.index++;
+                }
+            }
+            
+            size++;
         }
-        
-        size++;
     }
     
     public T get(int index) {
@@ -208,60 +210,60 @@ public final class FingerList<T> {
             }
         }
         
-        FingerListNode<T> node = bestFinger.node;
+        FingerListNode<T> removedNode = bestFinger.node;
         
+        // Move the closest finger to the node being removed:
         if (index < bestFinger.index) {
             bestFinger.index -= bestFingerDistance;
             
             while (bestFingerDistance > 0) {
                 bestFingerDistance--;
-                node = node.previousNode;
+                removedNode = removedNode.previousNode;
             }
         } else {
             bestFinger.index += bestFingerDistance;
             
             while (bestFingerDistance > 0) {
                 bestFingerDistance--;
-                node = node.nextNode;
+                removedNode = removedNode.nextNode;
             }
         }
         
-        bestFinger.node = node;
-
-        if (node.previousNode != null) {
-            bestFinger.node = node.previousNode;
-            bestFinger.index--;
-        } else if (node.nextNode != null) {
-            bestFinger.node = node.nextNode;
-//            bestFinger.index++;
-        }
-        
-        if (node == headNode) {
-            // Unlink the head node:
+        // Remove the node:
+        if (removedNode.previousNode == null) {
+            // Once here, removedNode is the head node:
+            for (Finger<T> finger : fingers) {
+                finger.index--;
+            }
+            
             headNode = headNode.nextNode;
             
             if (headNode != null) {
                 headNode.previousNode = null;
+                bestFinger.node = headNode;
+                bestFinger.index = 0; 
             }
-        } else if (node == tailNode) {
-            // Unlink the tail node:
+        } else if (removedNode.nextNode == null) {
+            // Once here, removedNode is the tail node:
             tailNode = tailNode.previousNode;
             
             if (tailNode != null) {
                 tailNode.nextNode = null;
+                bestFinger.node = tailNode;
+                bestFinger.index--;
             }
         } else {
-            // Unlink an inner node:
-            node.previousNode.nextNode = node.nextNode;
-            node.nextNode.previousNode = node.previousNode;
-            node.previousNode = null;
-            node.nextNode = null;
-        }
-        
-        for (Finger<T> finger : fingers) {
-            if (finger.index > index) {
-                finger.index--;
+            // Once here, removedNode has both previous and next nodes:
+            bestFinger.node = removedNode.nextNode;
+            
+            for (Finger<T> finger : fingers) {
+                if (finger.index > index) {
+                    finger.index--;
+                }
             }
+            
+            removedNode.nextNode.previousNode = removedNode.previousNode;
+            removedNode.previousNode.nextNode = removedNode.nextNode;
         }
         
         size--;
@@ -289,7 +291,7 @@ public final class FingerList<T> {
         
         if (index > size) {
             throw new IndexOutOfBoundsException(
-                    "index(" + index + ") >= (" + size + ")");
+                    "index(" + index + ") > (" + size + ")");
         }
     }
 }
