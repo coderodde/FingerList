@@ -247,7 +247,6 @@ public final class FingerList<T> {
                     finger.index--;
                 }  else if (finger.node == removedNode) {
                     finger.node = finger.node.nextNode;
-                    finger.index = 0;
                 }
             }
             

@@ -96,7 +96,7 @@ public class FingerListTest {
     
     @Test
     public void bruteForceTest() {
-        long seed = 1534668619918L; System.currentTimeMillis();
+        long seed = System.currentTimeMillis();
         Random random = new Random(seed);
         
         System.out.println("Seed = " + seed);
