@@ -21,7 +21,7 @@ public class FingerListDemo {
         }
         
         FingerList<Integer> fingerList = new FingerList<>(FINGERS);
-        
+        long fingerListTotalTime = 0L;
         long start = System.currentTimeMillis();
         
         for (Integer integer : integers) {
@@ -31,6 +31,7 @@ public class FingerListDemo {
         }
         
         long end = System.currentTimeMillis();
+        fingerListTotalTime += end - start;
         
         System.out.println("FingerList.add in " + (end - start) + " ms.");
         
@@ -41,6 +42,7 @@ public class FingerListDemo {
         }
         
         end = System.currentTimeMillis();
+        fingerListTotalTime += end - start;
         
         System.out.println("FingerList.get in " + (end - start) + " ms.");
         
@@ -51,13 +53,16 @@ public class FingerListDemo {
         }
         
         end = System.currentTimeMillis();
+        fingerListTotalTime += end - start;
         
         System.out.println("FingerList.remove in " + (end - start) + " ms.");
-        
+        System.out.println("FingerList total time: " + fingerListTotalTime +
+                " ms.");
         ////
         
         List<Integer> javaList = new LinkedList<>();
         
+        long javaListTotalTime = 0L;
         start = System.currentTimeMillis();
         
         for (Integer integer : integers) {
@@ -67,6 +72,7 @@ public class FingerListDemo {
         }
         
         end = System.currentTimeMillis();
+        javaListTotalTime += end - start;
         
         System.out.println("LinkedList.add in " + (end - start) + " ms.");
         
@@ -77,6 +83,7 @@ public class FingerListDemo {
         }
         
         end = System.currentTimeMillis();
+        javaListTotalTime += end - start;
         
         System.out.println("LinkedList.get in " + (end - start) + " ms.");
         
@@ -87,7 +94,10 @@ public class FingerListDemo {
         }
         
         end = System.currentTimeMillis();
+        javaListTotalTime += end - start;
         
         System.out.println("LinkedList.remove in " + (end - start) + " ms.");
+        System.out.println("LinkedList total time: "  + javaListTotalTime +
+                " ms.");
     }
 }
