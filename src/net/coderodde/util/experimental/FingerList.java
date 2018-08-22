@@ -241,9 +241,14 @@ public final class FingerList<T> {
                 finger.node = null;
             }
         } else if (removedNode.previousNode == null) {
-            // Once here, removedNode is the head node:
+            // Once here, removedNode is the head node.
             for (Finger<T> finger : fingers) {
-                finger.index--;
+                if (finger.index > 0) {
+                    finger.index--;
+                }  else if (finger.node == removedNode) {
+                    finger.node = finger.node.nextNode;
+                    finger.index = 0;
+                }
             }
             
             headNode = headNode.nextNode;
