@@ -133,12 +133,13 @@ public final class FingerList<T> {
                 }
             }
             
-            // Insert a new node before closestFinger.node:
             if (closestFinger.index == 0) {
-                nodeToAdd.nextNode = closestFinger.node;
-                closestFinger.node.previousNode = nodeToAdd;
+                // Set as the head node:
+                nodeToAdd.nextNode = headNode;
+                headNode.previousNode = nodeToAdd;
                 headNode = nodeToAdd;
             } else {
+                // Insert a new node before closestFinger.node:
                 nodeToAdd.nextNode = closestFinger.node;
                 nodeToAdd.previousNode = closestFinger.node.previousNode;
                 closestFinger.node.previousNode.nextNode = nodeToAdd;
@@ -230,7 +231,16 @@ public final class FingerList<T> {
         }
         
         // Remove the node:
-        if (removedNode.previousNode == null) {
+        if (size == 1) {
+            headNode = null;
+            tailNode = null;
+            
+            // Set all node references so that the garbate collector can claim
+            // them:
+            for (Finger<T> finger : fingers) {
+                finger.node = null;
+            }
+        } else if (removedNode.previousNode == null) {
             // Once here, removedNode is the head node:
             for (Finger<T> finger : fingers) {
                 finger.index--;
@@ -252,6 +262,15 @@ public final class FingerList<T> {
                 bestFinger.node = tailNode;
                 bestFinger.index--;
             }
+            
+            // Move all the fingers referencing the tail one position to the
+            // left:
+            for (Finger<T> finger : fingers) {
+                if (finger.index == index) {
+                    finger.index--;
+                    finger.node = finger.node.previousNode;
+                }
+            }
         } else {
             // Once here, removedNode has both previous and next nodes:
             bestFinger.node = removedNode.nextNode;
@@ -271,6 +290,32 @@ public final class FingerList<T> {
     
     public int size() {
         return size;
+    }
+    
+    boolean hasCorrectState() {
+        if (size == 0) {
+            for (Finger<T> finger : fingers) {
+                if (finger.node != null) {
+                    return false;
+                }
+            }
+        } else {
+            int index = 0;
+            
+            for (FingerListNode<T> node = headNode;
+                 node != null;
+                 node = node.nextNode, index++) {
+                for (Finger<T> finger : fingers) {
+                    if (finger.node == node && finger.index != index) {
+                        return false;
+                    } else if (finger.index < 0) {
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        return true;
     }
     
     private void checkAccessIndex(int index) {

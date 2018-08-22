@@ -113,12 +113,13 @@ public class FingerListTest {
                 // Remove:
                 case 0:
                     if (javaList.size() > 0) {
-                        System.out.println("remove");
+                        System.out.print("remove ");
                         int index = random.nextInt(javaList.size());
                         javaList.remove(index);
                         
                         try {
                             fingerList.remove(index);
+                            System.out.println(fingerList.hasCorrectState());
                         } catch (Exception ex) {
                             System.out.println(
                                     ex.getMessage() + " on " + 
@@ -128,6 +129,8 @@ public class FingerListTest {
                         if (!equals(javaList, fingerList)) {
                             fail("Failed while removing at index " + index);
                         }
+                    } else {
+                        System.out.println();
                     }
                     
                     break;
@@ -136,7 +139,7 @@ public class FingerListTest {
                 case 1:
                     
                     if (javaList.size() < 10) {
-                        System.out.println("add");
+                        System.out.print("add ");
                         // Do not create large lists, max. 10 elements.
                         Integer integer = random.nextInt(1000);
                         int index = random.nextInt(javaList.size() + 1);
@@ -144,6 +147,7 @@ public class FingerListTest {
                         
                         try {
                             fingerList.add(index, integer);
+                            System.out.println(fingerList.hasCorrectState());
                         } catch (Exception ex) {
                             System.out.println(
                                     ex.getMessage() + " on " + 
@@ -154,23 +158,28 @@ public class FingerListTest {
                             fail("Failed while adding at index " + index + 
                                  " value " + integer);
                         }
+                    } else {
+                        System.out.println();
                     }
                     
                     break;
                     
                 // Get:
                 case 2:
-                    System.out.println("get");    
                     
                     if (javaList.size() > 0) {
+                        System.out.print("get "); 
                         int index = random.nextInt(javaList.size());
                         int javaListInt = javaList.get(index);
                         int fingerListInt = fingerList.get(index);
+                        System.out.println(fingerList.hasCorrectState());
 
                         if (javaListInt != fingerListInt) {
                             fail("Failed while getting at index " + index +
                                  ", " + javaListInt + " vs. " + fingerListInt);
                         }
+                    } else {
+                        System.out.println();
                     }
                     
                     break;
