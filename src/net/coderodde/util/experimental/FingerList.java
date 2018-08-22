@@ -73,20 +73,26 @@ public final class FingerList<T> {
         checkAddIndex(index);
         
         if (size == 0) {
+            // Empty list. Just add the node and set all the fingers point to
+            // it:
             headNode = new FingerListNode(element);
             tailNode = headNode;
             size = 1;
             
+            // Set all the fingers to point to the only node:
             for (Finger<T> finger : fingers) {
                 finger.index = 0;
                 finger.node = headNode;
             }
         } else if (size == index) {
+            // Append the input element. Here, this list is not empty so that
+            // the tail node exists:
             FingerListNode<T> nodeToAdd = new FingerListNode<>(element);
             tailNode.nextNode = nodeToAdd;
             nodeToAdd.previousNode = tailNode;
             tailNode = nodeToAdd;
             
+            // Find the closest finger:
             int shortestFingerDistance = Integer.MAX_VALUE;
             Finger<T> closestFinger = null;
             
@@ -103,6 +109,7 @@ public final class FingerList<T> {
             closestFinger.node = tailNode;
             size++;
         } else {
+            // The element to add will have both a previous and a next nodes:
             FingerListNode<T> nodeToAdd = new FingerListNode<>(element);
             int shortestFingerDistance = Integer.MAX_VALUE;
             Finger<T> closestFinger = null;
@@ -116,7 +123,8 @@ public final class FingerList<T> {
                 }
             }
             
-            // Closest finger found:
+            // Closest finger found. Now move it to point to the node in front
+            // of which we will insert the new node:
             if (index <= closestFinger.index) {
                 closestFinger.index -= shortestFingerDistance;
                 
@@ -133,6 +141,7 @@ public final class FingerList<T> {
                 }
             }
             
+            // Insert the new node:
             if (closestFinger.index == 0) {
                 // Set as the head node:
                 nodeToAdd.nextNode = headNode;
@@ -147,6 +156,8 @@ public final class FingerList<T> {
                 closestFinger.index = index;
             }
             
+            // Because the new node shifts all the fingers on its right side
+            // one position to the right, update the relevant finger indices:
             for (Finger<T> finger : fingers) {
                 if (finger.index >= index) {
                     finger.index++;
@@ -159,6 +170,7 @@ public final class FingerList<T> {
     
     public T get(int index) {
         checkAccessIndex(index);
+        // Find the closest finger:
         int bestFingerDistance = Integer.MAX_VALUE;
         Finger<T> bestFinger = null;
         
@@ -173,6 +185,7 @@ public final class FingerList<T> {
         
         FingerListNode<T> node = bestFinger.node;
         
+        // Update the closest finger by moving it to the target node:
         if (index < bestFinger.index) { 
             bestFinger.index -= bestFingerDistance;
             
@@ -235,7 +248,7 @@ public final class FingerList<T> {
             headNode = null;
             tailNode = null;
             
-            // Set all node references so that the garbate collector can claim
+            // Set all node references so that the garbage collector can claim
             // them:
             for (Finger<T> finger : fingers) {
                 finger.node = null;
@@ -250,6 +263,7 @@ public final class FingerList<T> {
                 }
             }
             
+            // Update the head node:
             headNode = headNode.nextNode;
             
             if (headNode != null) {

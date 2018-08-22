@@ -78,7 +78,7 @@ public class FingerListDemo {
         
         end = System.currentTimeMillis();
         
-        System.out.println("JavaList.get in " + (end - start) + " ms.");
+        System.out.println("LinkedList.get in " + (end - start) + " ms.");
         
         start = System.currentTimeMillis();
         
@@ -88,6 +88,6 @@ public class FingerListDemo {
         
         end = System.currentTimeMillis();
         
-        System.out.println("JavarList.remove in " + (end - start) + " ms.");
+        System.out.println("LinkedList.remove in " + (end - start) + " ms.");
     }
 }
