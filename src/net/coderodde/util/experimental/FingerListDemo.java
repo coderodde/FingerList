@@ -8,7 +8,7 @@ public class FingerListDemo {
 
     private static final int NUMBER_OF_ADDS = 50_000;
     private static final int NUMBER_OF_GETS = 50_000;
-    private static final int FINGERS = 10;
+    private static final int FINGERS = 100;
     
     public static void main(String[] args) {
         long seed = System.currentTimeMillis();
