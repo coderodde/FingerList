@@ -1,4 +1,4 @@
-package net.coderodde.util.experimental;
+package com.github.coderodde.util.experimental;
 
 import java.util.Objects;
 

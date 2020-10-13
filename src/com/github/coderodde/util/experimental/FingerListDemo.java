@@ -1,4 +1,4 @@
-package net.coderodde.util.experimental;
+package com.github.coderodde.util.experimental;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class FingerListDemo {
 
-    private static final int NUMBER_OF_ADDS = 50_000;
+    private static final int NUMBER_OF_ADDS = 20_000;
     private static final int NUMBER_OF_GETS = 50_000;
     private static final int FINGERS = 100;
     
@@ -14,6 +14,8 @@ public class FingerListDemo {
         long seed = System.currentTimeMillis();
         Random javaRandom = new Random(seed);
         Random fingerRandom = new Random(seed);
+        Random linkedBlockRandom = new Random(seed);
+        Random commonsTreeRandom = new Random(seed);
         Integer[] integers = new Integer[NUMBER_OF_ADDS];
         
         for (int i = 0; i < integers.length; i++) {
@@ -58,10 +60,83 @@ public class FingerListDemo {
         System.out.println("FingerList.remove in " + (end - start) + " ms.");
         System.out.println("FingerList total time: " + fingerListTotalTime +
                 " ms.");
+        System.out.println("------");
         ////
         
-        List<Integer> javaList = new LinkedList<>();
+        LinkedBlockList<Integer> blockList = new LinkedBlockList<>(256);
         
+        long blockListTotalTime = 0L;
+        start = System.currentTimeMillis();
+        
+        for (Integer integer : integers) {
+            blockList.add(linkedBlockRandom.nextInt(blockList.size() + 1), integer);
+        }
+        
+        end = System.currentTimeMillis();
+        blockListTotalTime = end - start;
+        System.out.println("LinkedBlockList.add in " + (end - start) + " ms.");
+        
+        start = System.currentTimeMillis();
+        
+        for (int i = 0; i < NUMBER_OF_GETS; i++) {
+            blockList.get(linkedBlockRandom.nextInt(blockList.size()));
+        }
+        
+        end = System.currentTimeMillis();
+        blockListTotalTime += end - start;
+        System.out.println("LinkedBlockList.get in " + (end - start) + " ms.");
+        
+        start = System.currentTimeMillis();
+        
+        for (int i = 0; i < NUMBER_OF_ADDS; i++) {
+            blockList.remove(linkedBlockRandom.nextInt(blockList.size()));
+        }
+        
+        end = System.currentTimeMillis();
+        blockListTotalTime += end - start;
+        System.out.println(
+                "LinkedBlockList.remove in " + (end - start) + " ms.");
+        System.out.println("LinkedBlockList total time: " + 
+                blockListTotalTime + " ms.");
+        System.out.println("------");
+        ////
+        long commonsTreeListTotal = 0L;
+        LapTimer timer = new LapTimer();
+        List<Integer> commonsTreeList = new CommonsTreeList<>();
+        timer.push();
+        
+        for (Integer integer : integers) {
+            commonsTreeList.add(integer);
+        }
+        
+        long elapsed = timer.pop();
+        System.out.println("commons.TreeList" + timer);
+        commonsTreeListTotal += elapsed;
+        timer.push();
+        
+        for (int i = 0; i < NUMBER_OF_GETS; i++) {
+            commonsTreeList.get(
+                    commonsTreeRandom.nextInt(
+                            commonsTreeList.size()));
+        }
+        
+        elapsed = timer.pop();
+        commonsTreeListTotal += elapsed;
+        System.out.println("commons.TreeList" + timer);
+        timer.push();
+        
+        for (int i = 0; i < NUMBER_OF_ADDS; i++) {
+            commonsTreeList.remove(commonsTreeRandom.nextInt(commonsTreeList.size()));
+        }
+        
+        elapsed = timer.pop();
+        commonsTreeListTotal += elapsed;
+        System.out.println("commons.TreeList" + timer);
+        System.out.println("commons.TreeList total time: " +
+                commonsTreeListTotal + " ms.");
+        System.out.println("------");
+        ////
+        List<Integer> javaList = new LinkedList<>();
         long javaListTotalTime = 0L;
         start = System.currentTimeMillis();
         
@@ -73,9 +148,7 @@ public class FingerListDemo {
         
         end = System.currentTimeMillis();
         javaListTotalTime += end - start;
-        
         System.out.println("LinkedList.add in " + (end - start) + " ms.");
-        
         start = System.currentTimeMillis();
         
         for (int i = 0; i < NUMBER_OF_GETS; i++) {

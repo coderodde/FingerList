@@ -1,5 +1,6 @@
-package net.coderodde.util.experimental;
+package com.github.coderodde.util.experimental;
 
+import com.github.coderodde.util.experimental.FingerList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
