@@ -21,46 +21,79 @@ public final class SquareRootFingerList<E>
         extends AbstractSequentialList<E> 
         implements List<E>, Deque<E>, Cloneable, java.io.Serializable {
     
-    private static final class SquareRootFingerListNode<T> {
-        private T datum;
-        private SquareRootFingerListNode<T> prev;
-        private SquareRootFingerListNode<T> next;
+    private static final class SquareRootFingerListNode<E> {
+        E datum;
+        SquareRootFingerListNode<E> prev;
+        SquareRootFingerListNode<E> next;
 
-        public SquareRootFingerListNode(T datum) {
+        SquareRootFingerListNode(E datum) {
             this.datum = datum;
-        }
-        
-        T getDatum() {
-            return datum;
         }
     }
     
     private static final class Finger<T> {
         private SquareRootFingerListNode<T> node;
         private int index;
+        
+        Finger(SquareRootFingerListNode node, int index) {
+            this.node = node;
+            this.index = index;
+        }
     }
     
-    private static final class FingerStack<T> {
+    private static final class FingerStack<E> {
         private static final int DEFAULT_FINGER_QUEUE_ARRAY_CAPACITY = 8;
         
         private int size;
         private int mask = DEFAULT_FINGER_QUEUE_ARRAY_CAPACITY - 1;
         private int topIndex;
-        private Finger<T>[] fingerArray = 
+        private Finger<E>[] fingerArray = 
                 new Finger[DEFAULT_FINGER_QUEUE_ARRAY_CAPACITY];
         
-        void pushFinger(Finger<T> finger) {
+        public void pushFinger(Finger<E> finger) {
             ensureCapacity(++size);
             fingerArray[topIndex] = finger;
             topIndex = (topIndex + 1) & mask;
         }
         
-        void popFinger() {
+        public void popFinger() {
             int nextTailIndex = (topIndex - 1) & mask;
             // Let the garbage collector do its work:
             fingerArray[nextTailIndex] = null;
             topIndex = nextTailIndex;
             size--;
+        }
+        
+        public int size() {
+            return size;
+        }
+        
+        public Finger<E> get(int i) {
+            return fingerArray[topIndex - 1];
+        }
+        
+        public Finger<E> findClosestFinger(int index) {
+            int closestDistance = Integer.MAX_VALUE;
+            Finger<E> closestFinger = null;
+            Finger<E> finger = fingerArray[0];
+            
+            while (finger != null) {
+                int distance = Math.abs(finger.index - index);
+                
+                if (closestDistance > distance) {
+                    closestDistance = distance;
+                    closestFinger = finger;
+                }
+            }
+            
+            return closestFinger;
+        }
+        
+        public void clear() {
+            size = 0;
+            topIndex = 0;
+            mask = DEFAULT_FINGER_QUEUE_ARRAY_CAPACITY - 1;
+            fingerArray = new Finger[DEFAULT_FINGER_QUEUE_ARRAY_CAPACITY];
         }
         
         private void ensureCapacity(int requestedCapacity) {
@@ -72,11 +105,11 @@ public final class SquareRootFingerList<E>
         }
     }
     
-    private final FingerStack<E> fingerStack = new FingerStack<>();
-    private SquareRootFingerListNode<E> headNode;
-    private SquareRootFingerListNode<E> tailNode;
-    private int size;
-    private int modificationCount;
+    private transient final FingerStack<E> fingerStack = new FingerStack<>();
+    private transient SquareRootFingerListNode<E> headNode;
+    private transient SquareRootFingerListNode<E> tailNode;
+    private transient int size;
+    private transient int modificationCount;
     
     @Override
     public int size() {
@@ -91,7 +124,7 @@ public final class SquareRootFingerList<E>
     @Override
     public boolean contains(Object o) {
         for (SquareRootFingerListNode<E> node = headNode; node != null; node = node.next) {
-            if (Objects.equals(o, node.getDatum())) {
+            if (Objects.equals(o, node.datum)) {
                 return true;
             }
         }
@@ -132,22 +165,96 @@ public final class SquareRootFingerList<E>
         }
         
         size++;
-        
+        fixFingerArrayAfterAddition();
         return true;
-    }
-
-    private void fixFingerArrayAfterAddition() {
-        int optimalNumberOf
     }
     
     @Override
     public boolean remove(Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int index = 0;
+        
+        for (SquareRootFingerListNode<E> node = headNode; 
+                node != null; 
+                node = node.next, index++) {
+            if (Objects.equals(o, node.datum)) {
+                removeNode(index, node);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    private void removeNode(int index, SquareRootFingerListNode<E> node) {
+        if (node.prev == null) {
+            headNode = node.next;
+            headNode.prev = null;
+        } else {
+            node.prev.next = node.next;
+        }
+        
+        if (node.next == null) {
+            tailNode = node.prev;
+            tailNode.next = null;
+        } else {
+            node.next.prev = node.prev;
+        }
+        
+        --size;
+        
+        fixFingerStackSizeAfterRemoval();
+        fixFingerStackFingersAfterRemoval(index);
+    }
+    
+    private void fixFingerStackFingersAfterRemoval(int index) {
+        for (int i = 0; i < fingerStack.size(); i++) {
+            Finger<E> finger = fingerStack.get(i);
+            
+            if (finger.index >= index) {
+                finger.index--;
+            }
+        }
+    }
+    
+    private void fixFingerStackFingersAfterAddition(int index) {
+        for (int i = 0; i < fingerStack.size(); i++) {
+            Finger<E> finger = fingerStack.get(i);
+            
+            if (finger.index >= index) {
+                finger.index++;
+            }
+        }
+    }
+    
+    private void fixFingerStackSizeAfterRemoval() {
+        int optimalNumberOfFingers = getOptimalNumberOfFingers();
+        
+        if (fingerStack.size() > optimalNumberOfFingers) {
+            fingerStack.popFinger();
+        }
+    }
+    
+    private void fixFingerStackAfterAddition() {
+        int optimalNumberOfFingers = getOptimalNumberOfFingers();
+        
+        while (fingerStack.size() < optimalNumberOfFingers) {
+            fingerStack.pushFinger(new Finger<>(tailNode, size - 1));
+        }
+    }
+    
+    private int getOptimalNumberOfFingers() {
+        return (int) Math.sqrt(size);
     }
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        for (Object o : c) {
+            if (!contains(o)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     @Override
@@ -162,24 +269,67 @@ public final class SquareRootFingerList<E>
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        boolean removedAny = false;
+    
+        for (Object o : c) {
+            if (remove(o)) {
+                removedAny = true;
+            }
+        }
+        
+        return removedAny;
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        boolean removedAny = false;
+        
+        for (Object o : c) {
+            if (!contains(o)) {
+                remove(o);
+            }
+        }
+        
+        return removedAny;
     }
 
     @Override
     public void clear() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        fingerStack.clear();
+        size = 0;
+        headNode = null;
+        tailNode = null;
     }
 
     @Override
     public E get(int index) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        checkAccessIndex(index);
+        Finger<E> finger = fingerStack.findClosestFinger(index);
+        SquareRootFingerListNode<E> node = finger.node;
+        
+        for (int i = 0; i < finger.index - index; i++, node = node.prev) {
+            finger.node = finger.node.prev;
+        }
+        
+        for (int i = 0; i < index - finger.index; i++, node = node.next) {
+            finger.node = finger.node.next;
+        }
+        
+        return node.datum;
     }
 
+    
+    private void checkAccessIndex(int index) {
+        if (index < 0) {
+            throw new IndexOutOfBoundsException("index(" + index + ") < 0");
+        }
+        
+        if (index >= size) {
+            throw new IndexOutOfBoundsException(
+                    "index(" + index + ") >= size(" + size + ")");
+        }
+    }
+    
     @Override
     public E set(int index, E element) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -339,5 +489,14 @@ public final class SquareRootFingerList<E>
         tailNode.next = newNode;
         newNode.prev = tailNode;
         tailNode = newNode;
+    }
+
+    private void fixFingerArrayAfterAddition() {
+        int optimalNumberOfFingers = (int) Math.sqrt(size);
+        
+        while (fingerStack.size < optimalNumberOfFingers) {
+            Finger<E> finger = new Finger<>(tailNode, size - 1);
+            fingerStack.pushFinger(finger);
+        }
     }
 }
